@@ -1,0 +1,47 @@
+---
+import { Chart } from 'chart.js'; // If using Chart.js
+import { useEffect, useRef } from 'react'; // React usage in Astro
+
+interface Props {
+  data: {
+    eps: number;
+    sizePerDayGB: number;
+    totalGB: number;
+  };
+}
+
+const chartRef = useRef<HTMLCanvasElement | null>(null);
+
+function createChart() {
+  if (chartRef.current) {
+    new Chart(chartRef.current, {
+      type: 'bar',
+      data: {
+        labels: ['EPS', 'GB/day', 'Total GB'],
+        datasets: [
+          {
+            label: 'Log Volume Metrics',
+            data: [data.eps, data.sizePerDayGB, data.totalGB],
+            backgroundColor: ['#4CAF50', '#2196F3', '#FFC107'],
+          },
+        ],
+      },
+    });
+  }
+}
+
+useEffect(() => {
+  createChart();
+}, [data]);
+---
+<div>
+  <h2>Calculation Results</h2>
+  <ul>
+    <li><strong>Events per Second (EPS):</strong> {data.eps.toFixed(2)}</li>
+    <li><strong>GB per Day:</strong> {data.sizePerDayGB.toFixed(2)}</li>
+    <li><strong>Total GB (Retention):</strong> {data.totalGB.toFixed(2)}</li>
+  </ul>
+
+  <!-- Chart.js Visualization -->
+  <canvas ref={chartRef}></canvas>
+</div>

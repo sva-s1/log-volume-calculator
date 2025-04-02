@@ -1,0 +1,101 @@
+---
+import { initialCategories } from '../data/categories';
+import type { Device } from '../types/Device';
+
+const infrastructure = initialCategories.find((cat) => cat.id === 'infrastructure');
+if (!infrastructure) {
+  throw new Error('No Infrastructure category found.');
+}
+
+const devicesJSON = JSON.stringify(infrastructure.devices);
+---
+
+<section class="bg-purple-100 rounded-lg p-4 mb-4">
+  <div class="flex items-center justify-between cursor-pointer">
+    <h2 class="text-xl font-semibold">Infrastructure</h2>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </div>
+
+  <table class="min-w-full mt-4">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="text-left py-2 px-3">Device Type</th>
+        <th class="text-left py-2 px-3">Quantity</th>
+        <th class="text-left py-2 px-3">EPS</th>
+        <th class="text-left py-2 px-3">GB/day</th>
+      </tr>
+    </thead>
+    <tbody id="infraTbody"></tbody>
+  </table>
+</section>
+
+<script define:vars={{ devicesJSON }}>
+  let devices = JSON.parse(devicesJSON);
+
+  function computeGbPerDay(d) {
+    const eventSizeKB = 0.5;
+    const dailyEvents = d.eps * 86400;
+    return (dailyEvents * eventSizeKB * d.quantity) / (1024 * 1024);
+  }
+
+  function renderRows() {
+    const tbody = document.getElementById('infraTbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    devices.forEach((d) => {
+      const gbDay = computeGbPerDay(d);
+      d.gbPerDay = parseFloat(gbDay.toFixed(2));
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="py-2 px-3">${d.name}</td>
+        <td class="py-2 px-3">
+          <input type="number" min="0" value="${d.quantity}" 
+            class="border rounded px-2 py-1 w-20 text-right" data-id="${d.id}">
+        </td>
+        <td class="py-2 px-3">
+          <input type="number" min="0" step="0.1" value="${d.eps}" 
+            class="border rounded px-2 py-1 w-20 text-right" data-id="${d.id}">
+        </td>
+        <td class="py-2 px-3 text-right">${d.gbPerDay.toFixed(2)}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const id = e.target.dataset.id;
+        const device = devices.find(d => d.id === id);
+        if (device) {
+          const value = parseFloat(e.target.value) || 0;
+          if (e.target.type === 'number') {
+            if (e.target.step === '0.1') {
+              device.eps = value;
+            } else {
+              device.quantity = Math.round(value);
+            }
+          }
+          renderRows();
+        }
+      });
+    });
+  }
+
+  // Toggle section visibility
+  document.querySelector('section').addEventListener('click', (e) => {
+    if (e.target.closest('.cursor-pointer')) {
+      const table = e.target.closest('section').querySelector('table');
+      table.classList.toggle('hidden');
+      const svg = e.target.closest('section').querySelector('svg');
+      svg.style.transform = table.classList.contains('hidden') ? 'rotate(180deg)' : '';
+    }
+  });
+
+  // Initial render
+  renderRows();
+</script>

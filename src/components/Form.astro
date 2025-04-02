@@ -1,0 +1,89 @@
+---
+import { useState } from 'react'; // If using a React component inside Astro
+
+// The props might include a callback to pass form data upwards
+interface Props {
+  onSubmit: (data: FormData) => void;
+}
+
+interface FormData {
+  deviceCount: number;
+  deviceType: string;
+  logSeverity: string;
+  retentionDays: number;
+}
+
+const [formData, setFormData] = useState<FormData>({
+  deviceCount: 1,
+  deviceType: 'router',
+  logSeverity: 'medium',
+  retentionDays: 7,
+});
+
+function handleChange(e: any) {
+  const { name, value } = e.target;
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+}
+
+function handleSubmit(e: any) {
+  e.preventDefault();
+  onSubmit(formData);
+}
+---
+<form onSubmit={handleSubmit}>
+  <label>
+    Number of Devices:
+    <input
+      type="number"
+      name="deviceCount"
+      min="1"
+      value={formData.deviceCount}
+      onChange={handleChange}
+      required
+    />
+  </label>
+
+  <label>
+    Device Type:
+    <select
+      name="deviceType"
+      value={formData.deviceType}
+      onChange={handleChange}
+    >
+      <option value="router">Router</option>
+      <option value="switch">Switch</option>
+      <option value="firewall">Firewall</option>
+      <!-- Add more device types as needed -->
+    </select>
+  </label>
+
+  <label>
+    Log Severity:
+    <select
+      name="logSeverity"
+      value={formData.logSeverity}
+      onChange={handleChange}
+    >
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+  </label>
+
+  <label>
+    Retention Period (Days):
+    <input
+      type="number"
+      name="retentionDays"
+      min="1"
+      value={formData.retentionDays}
+      onChange={handleChange}
+      required
+    />
+  </label>
+
+  <button type="submit">Calculate</button>
+</form>
